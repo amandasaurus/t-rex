@@ -21,26 +21,26 @@ pub enum Tilecache {
 }
 
 impl Cache for Tilecache {
-    fn read<F>(&self, path: &str, read: F) -> bool
+    fn read<F>(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, read: F) -> bool
         where F : FnMut(&mut Read)
     {
         match self {
-            &Tilecache::Nocache(ref cache)   => cache.read(path, read),
-            &Tilecache::Filecache(ref cache) => cache.read(path, read),
+            &Tilecache::Nocache(ref cache)   => cache.read(tileset_name, zoom, x, y, read),
+            &Tilecache::Filecache(ref cache) => cache.read(tileset_name, zoom, x, y, read),
         }
     }
-    fn write(&self, path: &str, obj: &[u8]) -> Result<(), io::Error>
+    fn write(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, obj: &[u8]) -> Result<(), io::Error>
     {
         match self {
-            &Tilecache::Nocache(ref cache)   => cache.write(path, obj),
-            &Tilecache::Filecache(ref cache) => cache.write(path, obj),
+            &Tilecache::Nocache(ref cache)   => cache.write(tileset_name, zoom, x, y, obj),
+            &Tilecache::Filecache(ref cache) => cache.write(tileset_name, zoom, x, y, obj),
         }
     }
-    fn exists(&self, path: &str) -> bool
+    fn exists(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> bool
     {
         match self {
-            &Tilecache::Nocache(ref cache)   => cache.exists(path),
-            &Tilecache::Filecache(ref cache) => cache.exists(path),
+            &Tilecache::Nocache(ref cache)   => cache.exists(tileset_name, zoom, x, y),
+            &Tilecache::Filecache(ref cache) => cache.exists(tileset_name, zoom, x, y),
         }
     }
 }

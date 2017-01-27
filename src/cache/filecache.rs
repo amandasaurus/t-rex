@@ -13,20 +13,26 @@ pub struct Filecache {
     pub basepath: String,
 }
 
+impl Filecache {
+    fn path_for_tile(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> String {
+        format!("{}/{}/{}/{}/{}.pbf", self.basepath, tileset_name, zoom, x, y)
+    }
+}
+
 impl Cache for Filecache {
-    fn read<F>(&self, path: &str, mut read: F) -> bool
+    fn read<F>(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, mut read: F) -> bool
         where F : FnMut(&mut Read)
     {
-        let fullpath = format!("{}/{}", self.basepath, path);
+        let fullpath = self.path_for_tile(tileset_name, zoom, x, y);
         debug!("Filecache.read {}", fullpath);
         match File::open(&fullpath) {
             Ok(mut f) => { read(&mut f); true },
             Err(_e) => false
         }
     }
-    fn write(&self, path: &str, obj: &[u8]) -> Result<(), io::Error>
+    fn write(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, obj: &[u8]) -> Result<(), io::Error>
     {
-        let fullpath = format!("{}/{}", self.basepath, path);
+        let fullpath = self.path_for_tile(tileset_name, zoom, x, y);
         debug!("Filecache.write {}", fullpath);
         let p = Path::new(&fullpath);
         try!(fs::create_dir_all(p.parent().unwrap()));
@@ -34,8 +40,9 @@ impl Cache for Filecache {
         f.write_all(obj)
     }
 
-    fn exists(&self, path: &str) -> bool {
-        let fullpath = format!("{}/{}", self.basepath, path);
+    fn exists(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> bool
+    {
+        let fullpath = self.path_for_tile(tileset_name, zoom, x, y);
         Path::new(&fullpath).exists()
     }
 }
@@ -50,23 +57,27 @@ fn test_dircache() {
     let _ = fs::remove_dir_all(&basepath);
 
     let cache = Filecache { basepath: basepath };
+    let tileset_name = "tileset";
+    let zoom = 0;
+    let x = 1;
+    let y = 2;
     let path = "tileset/0/1/2.pbf";
     let fullpath = format!("{}/{}", cache.basepath, path);
     let obj = "0123456789";
 
     // Cache miss
-    assert_eq!(cache.read(path, |_| {}), false);
+    assert_eq!(cache.read(tileset_name, zoom, x, y, |_| {}), false);
 
     // Write into cache
-    let _ = cache.write(path, obj.as_bytes());
+    let _ = cache.write(tileset_name, zoom, x, y, obj.as_bytes());
     assert!(Path::new(&fullpath).exists());
 
     // Cache hit
-    assert_eq!(cache.read(path, |_| {}), true);
+    assert_eq!(cache.read(tileset_name, zoom, x, y, |_| {}), true);
 
     // Read from cache
     let mut s = String::new();
-    cache.read(path, |f| {
+    cache.read(tileset_name, zoom, x, y, |f| {
         let _ = f.read_to_string(&mut s);
     });
     assert_eq!(&s, "0123456789");

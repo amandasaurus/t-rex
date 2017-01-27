@@ -215,10 +215,8 @@ impl MvtService {
     }
     /// Fetch or create vector tile from input at x, y, z
     pub fn tile_cached(&self, tileset: &str, xtile: u16, ytile: u16, zoom: u8, _gzip: bool) -> Vec<u8> {
-        let path = format!("{}/{}/{}/{}.pbf", tileset, zoom, xtile, ytile);
-
         let mut tile: Option<Vec<u8>> = None;
-        self.cache.read(&path, |mut f| {
+        self.cache.read(&tileset, zoom, xtile, ytile, |mut f| {
             let mut data = Vec::new();
             let _ = f.read_to_end(&mut data);
             tile = Some(data);
@@ -232,7 +230,7 @@ impl MvtService {
 
         let mut tilegz = Vec::new();
         Tile::write_gz_to(&mut tilegz, &mvt_tile);
-        let _ = self.cache.write(&path, &tilegz);
+        let _ = self.cache.write(&tileset, zoom, xtile, ytile, &tilegz);
 
         //TODO: return unzipped if gzip == false
         tilegz
@@ -274,14 +272,12 @@ impl MvtService {
                         tileno += 1;
                         if skip { continue; }
 
-                        let path = format!("{}/{}/{}/{}.pbf", &tileset.name, zoom, xtile, ytile);
-
-                        if ! self.cache.exists(&path) {
+                        if ! self.cache.exists(&tileset.name, zoom, xtile, ytile) {
                             // Entry doesn't exist, so generate it
                             let mvt_tile = self.tile(&tileset.name, xtile, ytile, zoom);
                             let mut tilegz = Vec::new();
                             Tile::write_gz_to(&mut tilegz, &mvt_tile);
-                            let _ = self.cache.write(&path, &tilegz);
+                            let _ = self.cache.write(&tileset.name, zoom, xtile, ytile, &tilegz);
                         }
 
                         if progress { pb.inc(); }

@@ -8,10 +8,10 @@ use std::io;
 
 
 pub trait Cache {
-    fn read<F>(&self, path: &str, read: F) -> bool
+    fn read<F>(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, read: F) -> bool
         where F : FnMut(&mut Read);
-    fn write(&self, path: &str, obj: &[u8]) -> Result<(), io::Error>;
-    fn exists(&self, path: &str) -> bool;
+    fn write(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, obj: &[u8]) -> Result<(), io::Error>;
+    fn exists(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> bool;
 }
 
 
@@ -19,18 +19,20 @@ pub struct Nocache;
 
 impl Cache for Nocache {
      #[allow(unused_variables)]
-    fn read<F>(&self, path: &str, read: F) -> bool
+    fn read<F>(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, read: F) -> bool
         where F : FnMut(&mut Read)
     {
         false
     }
      #[allow(unused_variables)]
-    fn write(&self, path: &str, obj: &[u8]) -> Result<(), io::Error>
+    fn write(&self, tileset_name: &str, zoom: u8, x: u16, y: u16, obj: &[u8]) -> Result<(), io::Error>
     {
         Ok(())
     }
 
-    fn exists(&self, _path: &str) -> bool {
+     #[allow(unused_variables)]
+    fn exists(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> bool
+    {
         false
     }
 }
