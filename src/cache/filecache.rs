@@ -15,7 +15,12 @@ pub struct Filecache {
 
 impl Filecache {
     fn path_for_tile(&self, tileset_name: &str, zoom: u8, x: u16, y: u16) -> String {
-        format!("{}/{}/{}/{}/{}.pbf", self.basepath, tileset_name, zoom, x, y)
+        let x1 = format!("{:03}", x/1_000);
+        let x2 = format!("{:03}", x % 1_000);
+        let y1 = format!("{:03}", y/1_000);
+        let y2 = format!("{:03}", y % 1_000);
+
+        format!("{}/{}/{}/{}/{}/{}/{}.pbf", self.basepath, tileset_name, zoom, x1, x2, y1, y2)
     }
 }
 
